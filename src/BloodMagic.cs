@@ -37,7 +37,7 @@ namespace BloodMagic
             BloodMagic.Instance = this;
 
             Log = this.Logger;
-            Log.LogMessage($"Hello world from {NAME} {VERSION}!");
+            //Log.LogMessage($"Hello world from {NAME} {VERSION}!");
 
             // Any config settings you define should be set up like this:
             //ExampleConfig = Config.Bind("ExampleCategory", "ExampleSetting", false, "This is an example setting.");
@@ -49,11 +49,44 @@ namespace BloodMagic
             harmony.PatchAll();
         }
 
+        //private void SL_OnPAcksLoaded
+
         // Update is called once per frame. Use this only if needed.
         // You also have all other MonoBehaviour methods available (OnGUI, etc)
         internal void Update()
         {
 
+        }
+
+        //The below code does not belong to me, taken from Emo on the OW modding discord
+        public static Tag GetTagDefinition(string TagName)
+        {
+            foreach (var item in TagSourceManager.Instance.m_tags)
+            {
+
+                if (item.TagName == TagName)
+                {
+                    return item;
+                }
+            }
+
+            return default(Tag);
+        }
+
+        //Thank you Faeryn for the patch on this!
+        [HarmonyPatch(typeof(EffectCondition))]
+        public static class EffectConditionPatches
+        {
+            [HarmonyPatch(nameof(EffectCondition.IsValid)), HarmonyPrefix]
+            private static bool EffectCondition_IsValid_Prefix(Character _affectedCharacter, ref bool __result)
+            {
+                if (_affectedCharacter == null)
+                {
+                    __result = false;
+                    return false;
+                }
+                return true;
+            }
         }
     }
 }
