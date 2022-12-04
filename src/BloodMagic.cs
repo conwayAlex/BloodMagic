@@ -11,6 +11,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Collections;
 
 namespace BloodMagic
 {
@@ -37,7 +38,7 @@ namespace BloodMagic
             BloodMagic.Instance = this;
 
             Log = this.Logger;
-            //Log.LogMessage($"Hello world from {NAME} {VERSION}!");
+            Log.LogMessage($"{NAME} {VERSION} loading...");
 
             // Any config settings you define should be set up like this:
             //ExampleConfig = Config.Bind("ExampleCategory", "ExampleSetting", false, "This is an example setting.");
@@ -47,6 +48,7 @@ namespace BloodMagic
 
             var harmony = new Harmony(GUID);
             harmony.PatchAll();
+            Log.LogMessage($"{NAME} {VERSION} loaded.");
         }
 
         //private void SL_OnPAcksLoaded
@@ -72,6 +74,38 @@ namespace BloodMagic
 
             return default(Tag);
         }
+
+
+        [HarmonyPatch(typeof(Character), nameof(Character.Start))]
+        public class EnchantableBackpack
+        {
+            public static void Postfix(Character __instance)
+            {
+                DelayDo(() =>
+                {
+                    if (__instance.CharacterUI)
+                    {
+                        __instance.CharacterUI.EnchantmentMenu.m_inventoryDisplay.m_filter.m_equipmentTypes.Add(EquipmentSlot.EquipmentSlotIDs.Back);
+                        Log.LogMessage($"Enchantment Menu updated.");
+                    }
+                }, 10f);
+            }
+
+            public static void DelayDo(Action OnAfterDelay, float DelayTime)
+            {
+                BloodMagic.Instance.StartCoroutine(DoAfterDelay(OnAfterDelay, DelayTime));
+            }
+
+            public static IEnumerator DoAfterDelay(Action OnAfterDelay, float DelayTime)
+            {
+                yield return new WaitForSeconds(DelayTime);
+                OnAfterDelay.Invoke();
+                yield break;
+            }
+        }
+        
+
+
 
         //Thank you Faeryn for the patch on this!
         [HarmonyPatch(typeof(EffectCondition))]
